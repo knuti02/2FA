@@ -1,5 +1,7 @@
 package com.example.a2fa;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,7 +17,7 @@ import com.example.a2fa.databinding.CiscoWaitingTesterBinding;
 
 import java.util.Random;
 
-public class FirstFragment extends Fragment {
+public class CiscoWaitingScreen extends Fragment {
 
     private Object binding; // Changed to Object to handle both binding types
     private final boolean USE_VERSION_2 = true;
@@ -41,6 +43,24 @@ public class FirstFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+
+        // Start listening for the Duo "Success" signal
+        DuoSignalManager.getInstance().getAuthSignal().observe(getViewLifecycleOwner(), approved -> {
+            if (approved) {
+                // 1. Stop your fun fact timer
+                if (factRunnable != null) handler.removeCallbacks(factRunnable);
+
+                // 2. Open the URL
+                String url = "https://ntnu.1024.no/2026/var/";
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(url));
+                startActivity(intent);
+
+                // 3. Optional: Close the app/activity so they don't go back to the "Waiting" screen
+                requireActivity().finish();
+            }
+        });
 
         // Only run the timer if we are using Version 2 (the one with the TextView)
         if (USE_VERSION_2 && binding instanceof CiscoWaitingTesterBinding) {
@@ -70,5 +90,12 @@ public class FirstFragment extends Fragment {
             handler.removeCallbacks(factRunnable);
         }
         binding = null;
+    }
+
+    private void navigateToNextScreen() {
+        // Replace with your actual next fragment/activity logic
+        getParentFragmentManager().beginTransaction()
+                .replace(R.id.action_FirstFragment_to_SecondFragment, new SecondFragment())
+                .commit();
     }
 }
