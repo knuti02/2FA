@@ -7,14 +7,24 @@
 
     <fragment
         android:id="@+id/FirstFragment"
-        android:name="com.example.a2fa.CiscoWaitingScreen"
+        android:name="com.example.a2fa.FirstFragment"
         android:label="@string/first_fragment_label"
-        tools:layout="@layout/cisco_waiting_static">
+        tools:layout="@layout/fragment_first">
 
         <action
             android:id="@+id/action_FirstFragment_to_SecondFragment"
             app:destination="@id/SecondFragment" />
+        <action
+            android:id="@+id/action_FirstFragment_to_CiscoWaitingScreen"
+            app:destination="@id/CiscoWaitingScreen" />
     </fragment>
+
+    <fragment
+        android:id="@+id/CiscoWaitingScreen"
+        android:name="com.example.a2fa.CiscoWaitingScreen"
+        android:label="Waiting Screen"
+        tools:layout="@layout/cisco_waiting_static" />
+
     <fragment
         android:id="@+id/SecondFragment"
         android:name="com.example.a2fa.SecondFragment"
