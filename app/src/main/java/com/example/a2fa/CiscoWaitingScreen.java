@@ -17,13 +17,14 @@ import com.duosecurity.client.Auth;
 import com.example.a2fa.databinding.CiscoWaitingStaticBinding;
 import com.example.a2fa.databinding.CiscoWaitingTesterBinding;
 
-import java.util.Objects;
 import java.util.Random;
+import java.util.Stack;
 
 public class CiscoWaitingScreen extends Fragment {
 
-    private Object binding; // Changed to Object to handle both binding types
-    private final boolean USE_VERSION_2 = true;
+    private Object binding;
+    private final boolean USE_VERSION_2 = true; // Enabled to use the fun facts screen
+    private final int SLEEP_TIME = 4; // 4, 8, 12
     private String message = "";
 
     // Fun fact logic variables
@@ -33,6 +34,10 @@ public class CiscoWaitingScreen extends Fragment {
             R.string.fun_fact_1, R.string.fun_fact_2, R.string.fun_fact_3,
             R.string.fun_fact_4, R.string.fun_fact_5, R.string.fun_fact_6
     };
+
+    private int currentFactIndex = new Random().nextInt(factResources.length);
+    private final Stack<Integer> factHistory = new Stack<>();
+    private final Stack<Integer> forwardHistory = new Stack<>();
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -50,77 +55,59 @@ public class CiscoWaitingScreen extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Only run the timer if we are using Version 2 (the one with the TextView)
         if (USE_VERSION_2 && binding instanceof CiscoWaitingTesterBinding) {
             CiscoWaitingTesterBinding testerBinding = (CiscoWaitingTesterBinding) binding;
-            /*
+
             factRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    int randomFact = factResources[new Random().nextInt(factResources.length)];
-                    testerBinding.funFactTextview.setText(randomFact);
-
-                    // Repeat every 6 seconds
+                    showNextFact(testerBinding);
                     handler.postDelayed(this, 6000);
                 }
             };
 
-            // Start the loop immediately
-            handler.post(factRunnable);
-
-            */
-            // scrollview
-            final int[] currentIndex = {0};
-
-
-// Show first fact immediately
-            testerBinding.funFactTextview.setText(factResources[0]);
-
-            testerBinding.backButton.setOnClickListener(v -> {
-                if (currentIndex[0] > 0) {
-                    currentIndex[0]--;
-                } else {
-                    currentIndex[0] = factResources.length - 1;
-                }
-                testerBinding.funFactTextview.setText(factResources[currentIndex[0]]);
-            });
-
-            testerBinding.nextButton.setOnClickListener(v -> {
-                if (currentIndex[0] < factResources.length - 1) {
-                    currentIndex[0]++;
-                } else {
-                    currentIndex[0] = 0;
-                }
-                testerBinding.funFactTextview.setText(factResources[currentIndex[0]]);
-            });
+            // Show first fact immediately and start timer
+            testerBinding.funFactTextview.setText(factResources[currentFactIndex]);
+            handler.postDelayed(factRunnable, 6000);
         }
+    }
+
+    private void showNextFact(CiscoWaitingTesterBinding testerBinding) {
+        // Save current index to history
+        factHistory.push(currentFactIndex);
+        if (factHistory.size() > 50) factHistory.remove(0); // Prevent stack from growing indefinitely
+
+        if (!forwardHistory.isEmpty()) {
+            // If we have "forward" history (from clicking back), use it
+            currentFactIndex = forwardHistory.pop();
+        } else {
+            // Otherwise, pick a new random index
+            int nextIndex;
+            Random random = new Random();
+            do {
+                nextIndex = random.nextInt(factResources.length);
+            } while (nextIndex == currentFactIndex && factResources.length > 1);
+            currentFactIndex = nextIndex;
+        }
+
+        testerBinding.funFactTextview.setText(factResources[currentFactIndex]);
     }
 
     private void handleSuccess() {
         handler.post(() -> {
             if (!isAdded()) return;
-
-            System.out.println("Success!!!:D");
-
-            // 1. Stop your fun fact timer
             if (factRunnable != null) handler.removeCallbacks(factRunnable);
 
-            // 2. Open the URL
             String url = "https://ntnu.1024.no/2026/var/";
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse(url));
             startActivity(intent);
-
-            // 3. Optional: Close the app/activity so they don't go back to the "Waiting" screen
-            //requireActivity().finish();
-
         });
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // Crucial: Stop the timer to prevent memory leaks when the fragment is destroyed
         if (factRunnable != null) {
             handler.removeCallbacks(factRunnable);
         }
@@ -130,26 +117,17 @@ public class CiscoWaitingScreen extends Fragment {
     public void triggerPush() {
         new Thread(() -> {
             try {
-                // 1️⃣ Create Auth instance
+                Thread.sleep((this.SLEEP_TIME - 1) * 1000);
                 String host = "api-cb21dc92.duosecurity.com";
                 String uri = "/auth/v2/auth";
                 Auth auth = new Auth("POST", host, uri, 30);
 
-                // 2️⃣ Set Duo parameters
-                auth.addParam("username", "user2");
-                auth.addParam("factor", "auto");
+                auth.addParam("username", "user1");
+                auth.addParam("factor", "push");
                 auth.addParam("device", "auto");
-
-                // 3️⃣ Sign the request with your keys
                 auth.signRequest("DI6BM6P06YBQXFU8EOT8", "vb13i6M78qrJo9Ebw9TitijLwHaMiSopLbgA347S");
 
-                // 4️⃣ Execute request
-                Object response = auth.executeRequest(); // returns response object from Duo
-
-                System.out.println("Duo push response: " + response);
-                
-                // For now, assuming any non-exception response is success
-                // You might want to parse 'response' to be sure
+                Object response = auth.executeRequest();
                 this.message = "Success";
                 handleSuccess();
                 
