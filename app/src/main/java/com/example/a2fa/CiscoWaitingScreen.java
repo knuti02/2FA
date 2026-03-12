@@ -53,7 +53,7 @@ public class CiscoWaitingScreen extends Fragment {
         // Only run the timer if we are using Version 2 (the one with the TextView)
         if (USE_VERSION_2 && binding instanceof CiscoWaitingTesterBinding) {
             CiscoWaitingTesterBinding testerBinding = (CiscoWaitingTesterBinding) binding;
-
+            /*
             factRunnable = new Runnable() {
                 @Override
                 public void run() {
@@ -67,6 +67,32 @@ public class CiscoWaitingScreen extends Fragment {
 
             // Start the loop immediately
             handler.post(factRunnable);
+
+            */
+            // scrollview
+            final int[] currentIndex = {0};
+
+
+// Show first fact immediately
+            testerBinding.funFactTextview.setText(factResources[0]);
+
+            testerBinding.backButton.setOnClickListener(v -> {
+                if (currentIndex[0] > 0) {
+                    currentIndex[0]--;
+                } else {
+                    currentIndex[0] = factResources.length - 1;
+                }
+                testerBinding.funFactTextview.setText(factResources[currentIndex[0]]);
+            });
+
+            testerBinding.nextButton.setOnClickListener(v -> {
+                if (currentIndex[0] < factResources.length - 1) {
+                    currentIndex[0]++;
+                } else {
+                    currentIndex[0] = 0;
+                }
+                testerBinding.funFactTextview.setText(factResources[currentIndex[0]]);
+            });
         }
     }
 
@@ -86,7 +112,8 @@ public class CiscoWaitingScreen extends Fragment {
             startActivity(intent);
 
             // 3. Optional: Close the app/activity so they don't go back to the "Waiting" screen
-            requireActivity().finish();
+            //requireActivity().finish();
+
         });
     }
 

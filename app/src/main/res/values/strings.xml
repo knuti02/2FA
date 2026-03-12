@@ -8,7 +8,7 @@
     <string name="previous">Previous</string>
 
 
-    <string name="waiting_for_cisco_duo">Waiting for Cisco Duo...</string>
+    <string name="waiting_for_cisco_duo">Waiting for Cisco Duo two factor approval...</string>
     <string name="fun_fact_1">A shrimp\'s heart is located in its head.</string>
     <string name="fun_fact_2">Sloths can hold their breath longer than dolphins can—up to 40 minutes underwater.</string>
     <string name="fun_fact_3">The first footprints on the moon will likely stay there for at least a million years because there is no wind to blow them away.</string>
